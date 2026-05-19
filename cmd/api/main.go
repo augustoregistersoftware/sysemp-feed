@@ -1,10 +1,13 @@
 package main
 
 import (
+	"os"
+	"sysemp_feed/auth"
 	"sysemp_feed/controller"
 	"sysemp_feed/db"
 	"sysemp_feed/repository"
 	"sysemp_feed/usecase"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +27,15 @@ func main() {
 	defer dbConnection.Close()
 
 	// =========================
+	// JWT
+	// =========================
+
+	authService := auth.NewService(
+		getEnv("JWT_SECRET", "dev-secret-change-me"),
+		24*time.Hour,
+	)
+
+	// =========================
 	// DEPENDENCY INJECTION
 	// =========================
 	baseRepository := repository.NewRepository(dbConnection)
@@ -33,11 +45,28 @@ func main() {
 	UserUseCase := usecase.NewUserUseCase(UserCreateRepository)
 	UserController := controller.NewUserController(UserUseCase)
 
+	userRepository := repository.NewUserRepository(baseRepository)
+	authUsecase := usecase.NewAuthUsecase(&userRepository)
+
+	authController := controller.NewAuthController(
+		authService,
+		authUsecase,
+	)
+
 	// =========================
 	// ROUTES
 	// =========================
+	server.POST("/login", authController.Login)
 	server.POST("/user", UserController.CreateUser)
 
 	server.Run(":8080")
+}
 
+func getEnv(key string, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	return value
 }

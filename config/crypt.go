@@ -1,78 +1,108 @@
 package config
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	"io"
-	"os"
+	"strings"
 
-	"github.com/joho/godotenv"
 	"golang.org/x/crypto/argon2"
 )
 
-const saltSize = 16
-
-func NewCryptConfig(password string) (string, error) {
-	_ = godotenv.Load()
-
-	passwordEnv := os.Getenv("APP_SECRET")
-	if passwordEnv == "" {
-		return "", fmt.Errorf("APP_SECRET não configurado no .env")
-	}
-
-	passwordOriginal := password
-	criptografado, err := Encrypt(passwordOriginal, passwordEnv)
-	if err != nil {
-		return "", err
-	}
-	return criptografado, nil
+type ArgonParams struct {
+	Memory      uint32
+	Iterations  uint32
+	Parallelism uint8
+	SaltLength  uint32
+	KeyLength   uint32
 }
 
-func deriveKey(password string, salt []byte) []byte {
-	return argon2.IDKey(
+var defaultParams = &ArgonParams{
+	Memory:      64 * 1024,
+	Iterations:  3,
+	Parallelism: 4,
+	SaltLength:  16,
+	KeyLength:   32,
+}
+
+func HashPassword(password string) (string, error) {
+	salt := make([]byte, defaultParams.SaltLength)
+
+	if _, err := rand.Read(salt); err != nil {
+		return "", err
+	}
+
+	hash := argon2.IDKey(
 		[]byte(password),
 		salt,
-		1,
-		64*1024,
-		4,
-		32,
+		defaultParams.Iterations,
+		defaultParams.Memory,
+		defaultParams.Parallelism,
+		defaultParams.KeyLength,
 	)
+
+	base64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	base64Hash := base64.RawStdEncoding.EncodeToString(hash)
+
+	encodedHash := fmt.Sprintf(
+		"$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
+		defaultParams.Memory,
+		defaultParams.Iterations,
+		defaultParams.Parallelism,
+		base64Salt,
+		base64Hash,
+	)
+
+	return encodedHash, nil
 }
 
-func Encrypt(plainText string, password string) (string, error) {
-	salt := make([]byte, saltSize)
-
-	_, err := io.ReadFull(rand.Reader, salt)
-	if err != nil {
-		return "", err
+func VerifyPassword(password string, encodedHash string) (bool, error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 6 {
+		return false, fmt.Errorf("hash invalida")
 	}
 
-	key := deriveKey(password, salt)
+	var memory uint32
+	var iterations uint32
+	var parallelism uint8
 
-	block, err := aes.NewCipher(key)
+	_, err := fmt.Sscanf(
+		parts[3],
+		"m=%d,t=%d,p=%d",
+		&memory,
+		&iterations,
+		&parallelism,
+	)
+
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
-	gcm, err := cipher.NewGCM(block)
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-
-	_, err = io.ReadFull(rand.Reader, nonce)
+	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
-	cipherText := gcm.Seal(nil, nonce, []byte(plainText), nil)
+	keyLength := uint32(len(expectedHash))
 
-	finalData := append(salt, nonce...)
-	finalData = append(finalData, cipherText...)
+	comparisonHash := argon2.IDKey(
+		[]byte(password),
+		salt,
+		iterations,
+		memory,
+		parallelism,
+		keyLength,
+	)
 
-	return base64.StdEncoding.EncodeToString(finalData), nil
+	if subtle.ConstantTimeCompare(expectedHash, comparisonHash) == 1 {
+		return true, nil
+	}
+
+	return false, nil
 }

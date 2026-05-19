@@ -5,3 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS approved_users (
+    id_approved_users SERIAL PRIMARY KEY,
+    id_user INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

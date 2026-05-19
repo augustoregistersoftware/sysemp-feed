@@ -17,7 +17,7 @@ func NewUserUseCase(userRepo repository.UserRepository) UserUseCase {
 }
 
 func (u *UserUseCase) CreateUser(ctx context.Context, user model.User) (model.User, error) {
-	_, err := u.repository.CreateUser(user)
+	_, err := u.repository.CreateUser(ctx, user)
 	if err != nil {
 		return model.User{}, err
 	}
