@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: sysemp_feed API
+  version: 1.0.0
+  description: API para cadastro de usuarios e autenticacao por JWT.
+servers:
+  - url: http://localhost:8080
+    description: Ambiente local
+tags:
+  - name: Auth
+    description: Autenticacao de usuarios
+  - name: Users
+    description: Cadastro de usuarios
+paths:
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Autentica um usuario
+      description: Valida as credenciais do usuario e retorna um token JWT.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              login:
+                value:
+                  email: usuario@example.com
+                  password: senha123
+      responses:
+        '200':
+          description: Login realizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    token_type: Bearer
+                    expires_in: 86400
+        '400':
+          description: Corpo da requisicao invalido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidBody:
+                  value:
+                    error: body invalid
+        '401':
+          description: Credenciais invalidas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    error: invalid credentials
+        '500':
+          description: Erro interno ao validar credenciais ou gerar token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /user:
+    post:
+      tags:
+        - Users
+      summary: Cadastra um usuario
+      description: Cria um novo usuario com e-mail, nome de usuario e senha.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              createUser:
+                value:
+                  email: usuario@example.com
+                  username: usuario
+                  password: senha123
+      responses:
+        '201':
+          description: Usuario criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+              examples:
+                created:
+                  value:
+                    status: User created successfully
+        '400':
+          description: Corpo da requisicao invalido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Ja existe um usuario cadastrado com o e-mail informado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailAlreadyExists:
+                  value:
+                    error: email already exists
+        '500':
+          description: Erro interno ao criar usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          minLength: 1
+          example: senha123
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: Token JWT de acesso.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          format: int64
+          description: Tempo de expiracao do token em segundos.
+          example: 86400
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - username
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: usuario@example.com
+        username:
+          type: string
+          maxLength: 255
+          example: usuario
+        password:
+          type: string
+          format: password
+          minLength: 1
+          maxLength: 255
+          example: senha123
+    CreateUserResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: User created successfully
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: error message
+      additionalProperties: true
