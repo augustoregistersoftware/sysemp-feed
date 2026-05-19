@@ -19,6 +19,16 @@ func NewUserController(userUseCase usecase.UserUseCase) UserController {
 	}
 }
 
+func (u *UserController) ApproveUser(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := u.UserUseCase.ApproveUser(ctx.Request.Context(), id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"status": "User approved successfully"})
+}
+
 func (u *UserController) CreateUser(ctx *gin.Context) {
 	var user model.User
 

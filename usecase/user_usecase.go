@@ -24,3 +24,7 @@ func (u *UserUseCase) CreateUser(ctx context.Context, user model.User) (model.Us
 
 	return user, nil
 }
+
+func (u *UserUseCase) ApproveUser(ctx context.Context, id string) error {
+	return u.repository.ApproveUser(ctx, id)
+}

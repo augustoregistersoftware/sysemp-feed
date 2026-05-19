@@ -57,7 +57,8 @@ func main() {
 	// ROUTES
 	// =========================
 	server.POST("/login", authController.Login)
-	server.POST("/user", UserController.CreateUser)
+	server.POST("/create_user", UserController.CreateUser)
+	server.DELETE("/approved_user/:id", UserController.ApproveUser)
 
 	server.Run(":8080")
 }

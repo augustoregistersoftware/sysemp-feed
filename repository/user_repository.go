@@ -106,3 +106,18 @@ func (ur *UserRepository) CreateUser(ctx context.Context, user model.User) (int,
 
 	return id_user, nil
 }
+
+func (ur *UserRepository) ApproveUser(ctx context.Context, id string) error {
+	_, err := ur.DB.ExecContext(
+		ctx,
+		"DELETE FROM approved_users WHERE id_user = $1",
+		id,
+	)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
