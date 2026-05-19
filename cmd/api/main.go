@@ -40,18 +40,18 @@ func main() {
 	// =========================
 	baseRepository := repository.NewRepository(dbConnection)
 
-	// User Configs
+	// Repositories
 	UserCreateRepository := repository.NewUserRepository(baseRepository)
-	UserUseCase := usecase.NewUserUseCase(UserCreateRepository)
-	UserController := controller.NewUserController(UserUseCase)
-
 	userRepository := repository.NewUserRepository(baseRepository)
+	// Use Cases
+	UserUseCase := usecase.NewUserUseCase(UserCreateRepository)
 	authUsecase := usecase.NewAuthUsecase(&userRepository)
-
+	// Controllers
 	authController := controller.NewAuthController(
 		authService,
 		authUsecase,
 	)
+	UserController := controller.NewUserController(UserUseCase)
 
 	// =========================
 	// ROUTES
