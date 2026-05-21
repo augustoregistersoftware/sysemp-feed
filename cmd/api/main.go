@@ -73,15 +73,18 @@ func main() {
 	// Repositories
 	UserCreateRepository := repository.NewUserRepository(baseRepository)
 	userRepository := repository.NewUserRepository(baseRepository)
+	paymentsRepository := repository.NewPaymentsRepository(baseRepository)
 	// Use Cases
 	UserUseCase := usecase.NewUserUseCase(UserCreateRepository)
 	authUsecase := usecase.NewAuthUsecase(&userRepository)
+	PaymentsUseCase := usecase.NewPaymentsUseCase(paymentsRepository)
 	// Controllers
 	authController := controller.NewAuthController(
 		authService,
 		authUsecase,
 	)
 	UserController := controller.NewUserController(UserUseCase)
+	PaymentsController := controller.NewPaymentsController(PaymentsUseCase)
 
 	// =========================
 	// ROUTES
@@ -90,6 +93,8 @@ func main() {
 	server.POST("/create_user", UserController.CreateUser)
 	server.PATCH("/reproved_user/:id", UserController.ReproveUser)
 	server.DELETE("/approved_user/:id", UserController.ApproveUser)
+
+	server.GET("/payments", PaymentsController.Payments)
 
 	server.Run(":8080")
 }

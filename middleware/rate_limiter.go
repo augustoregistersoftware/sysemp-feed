@@ -103,8 +103,7 @@ func RateLimiterMiddleware(
 
 			ctx.Header("Retry-After", retryAfter)
 			ctx.JSON(http.StatusTooManyRequests, gin.H{
-				"error":       "Too Many Requests",
-				"retry_after": retryAfter,
+				"error": "Too Many Requests",
 			})
 
 			ctx.Abort()
