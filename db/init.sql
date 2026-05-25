@@ -38,13 +38,13 @@ name_pag VARCHAR(100),
 paid BOOLEAN);
 
 CREATE TABLE IF NOT EXISTS account_to_pay_payments (
-id_account_to_pay_payments SERIAL PRIMARY KEY,
+id_account_to_pay_payments uuid PRIMARY KEY,
 id_payments INT,
 id_account_to_pay INT
 );
 
 CREATE TABLE IF NOT EXISTS account_to_pay_documents (
-id_account_to_pay_documents SERIAL PRIMARY KEY,
+id_account_to_pay_documents uuid PRIMARY KEY,
 id_account_to_pay INT,
 documents bytea
 );
@@ -64,3 +64,9 @@ INSERT INTO payments (id_payments, name) VALUES
 (7, 'Vale Alimentação'),
 (8, 'Vale Refeição'),
 (9, 'Cheque');
+
+ALTER TABLE account_to_pay_payments
+ADD coin VARCHAR(4);
+
+ALTER TABLE account_to_pay_payments
+ADD value_coin DECIMAL(10,4);
