@@ -18,11 +18,10 @@ func NewAccountToPayUseCase(accountToPayRepo repository.AccountToPayRepository) 
 
 func (u *AccountToPayUseCase) CreateAccountToPay(ctx context.Context, typ string, accountToPay model.AccountToPay) error {
 	if typ == "0" {
-		accountToPay.DESCRIPTION_DETAILS = accountToPay.DESCRIPTION_DETAILS + " - foreign payment"
-		println("Description details " + accountToPay.DESCRIPTION_DETAILS)
 		return u.repository.NewAccountToPayInsert(ctx, accountToPay)
 	} else {
-		return nil
+		accountToPay.DESCRIPTION_DETAILS = accountToPay.DESCRIPTION_DETAILS + " - foreign payment"
+		return u.repository.NewAccountToPayInsert(ctx, accountToPay)
 	}
 }
 
