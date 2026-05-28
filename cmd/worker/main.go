@@ -54,7 +54,7 @@ func main() {
 			continue
 		}
 
-		processPayment(event.PaymentID)
+		processPayment(event.CustomerName, event.Shopp, event.TransactionID, event.Data, event.Price)
 
 		err = msg.Ack(false)
 		if err != nil {
@@ -62,27 +62,27 @@ func main() {
 			continue
 		}
 
-		log.Printf("[worker] mensagem consumida e confirmada: payment_id=%s", event.PaymentID)
+		log.Printf("[worker] mensagem consumida e confirmada: transaction_id=%s", event.TransactionID)
 	}
 }
 
-func processPayment(paymentID string) {
+func processPayment(customerName string, shopp string, transactionID string, data string, price string) {
 	// updateCache(paymentID)
-	sendNotification(paymentID)
-	updateAnalytics(paymentID)
+	sendNotification(customerName, shopp, transactionID, data, price)
+	updateAnalytics(transactionID)
 }
 
 // func updateCache(paymentID string) {
 // 	log.Printf("[worker] atualizando cache pagamento %s", paymentID)
 // }
 
-func sendNotification(paymentID string) {
-	log.Printf("[worker] enviando notificacao pagamento %s", paymentID)
+func sendNotification(customerName string, shopp string, transactionID string, data string, price string) {
+	log.Printf("[worker] enviando notificacao pagamento %s", transactionID)
 
 	from := "augusto.valenciano@fabricadecodigos.com.br"
 	password := "ziyq givc undp dowt"
 
-	to := []string{"augustovalenciano2004@gmail.com"}
+	to := []string{"m.eduarda.borghi@gmail.com"}
 
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
@@ -90,9 +90,9 @@ func sendNotification(paymentID string) {
 
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	subject := "Novo pagamento criado"
+	subject := "Pagamento Aprovado"
 
-	html := BuildPurchaseEmail("Augusto", "Passagem Aérea", paymentID, "1500,00")
+	html := BuildPurchaseEmail(customerName, shopp, transactionID, data, price)
 
 	message := []byte(
 		"From: " + from + "\r\n" +
@@ -115,7 +115,7 @@ func updateAnalytics(paymentID string) {
 	log.Printf("[worker] atualizando analytics para pagamento... %s", paymentID)
 }
 
-func BuildPurchaseEmail(customerName string, product string, transactionID string, price string) string {
-	html := fmt.Sprintf(` <!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <style> body { background-color: #f4f4f7; font-family: Arial, sans-serif; margin: 0; padding: 0; } .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); } .header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 32px; text-align: center; } .header h1 { margin: 0; font-size: 28px; } .content { padding: 32px; color: #333; } .badge { display: inline-block; background: #dcfce7; color: #166534; padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: bold; margin-bottom: 20px; } .info-box { background: #f9fafb; border-radius: 12px; padding: 20px; margin-top: 20px; } .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; } .label { color: #6b7280; } .value { font-weight: bold; color: #111827; } .price { font-size: 28px; color: #4f46e5; font-weight: bold; text-align: center; margin-top: 25px; } .footer { text-align: center; padding: 24px; font-size: 13px; color: #9ca3af; background: #f9fafb; } </style> </head> <body> <div class="container"> <div class="header"> <h1>Pagamento Confirmado</h1> </div> <div class="content"> <div class="badge"> Compra Aprovada </div> <p>Olá <strong>%s</strong>,</p> <p> Seu pagamento foi processado com sucesso. Abaixo estão os detalhes da compra: </p> <div class="info-box"> <div class="row"> <span class="label">Produto</span> <span class="value">%s</span> </div> <div class="row"> <span class="label">Transação</span> <span class="value">%s</span> </div> <div class="row"> <span class="label">Status</span> <span class="value">Pago</span> </div> </div> <div class="price"> R$ %s </div> </div> <div class="footer"> Este email é automático. Não responda. </div> </div> </body> </html> `, customerName, product, transactionID, price)
+func BuildPurchaseEmail(customerName string, shopp string, transactionID string, data string, price string) string {
+	html := fmt.Sprintf(` <!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <style> body { background-color: #f4f4f7; font-family: Arial, sans-serif; margin: 0; padding: 0; } .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); } .header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 32px; text-align: center; } .header h1 { margin: 0; font-size: 28px; } .content { padding: 32px; color: #333; } .badge { display: inline-block; background: #dcfce7; color: #166534; padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: bold; margin-bottom: 20px; } .info-box { background: #f9fafb; border-radius: 12px; padding: 20px; margin-top: 20px; } .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; } .label { color: #6b7280; } .value { font-weight: bold; color: #111827; } .price { font-size: 28px; color: #4f46e5; font-weight: bold; text-align: center; margin-top: 25px; } .footer { text-align: center; padding: 24px; font-size: 13px; color: #9ca3af; background: #f9fafb; } </style> </head> <body> <div class="container"> <div class="header"> <h1>Pagamento Aprovado</h1> </div> <div class="content"> <div class="badge"> Compra Aprovada </div> <p>Olá <strong>%s</strong>,</p> <p> Seu pagamento foi processado com sucesso. Abaixo estão os detalhes da compra: </p> <div class="info-box"> <div class="row"> <span class="label">Compra: </span> <span class="value">%s</span> </div> <div class="row"> <span class="label">ID da transação: </span> <span class="value">%s</span> </div> <div class="row"> <span class="label">Data: </span> <span class="value">%s</span> </div> </div> <div class="price"> R$ %s </div> </div> <div class="footer"> Este email é automático. Não responda. </div> </div> </body> </html> `, customerName, shopp, transactionID, data, price)
 	return html
 }

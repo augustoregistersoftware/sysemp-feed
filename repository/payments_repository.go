@@ -43,3 +43,36 @@ func (r *PaymentsRepository) ProcessPayment(ctx context.Context, pay model.Pay) 
 
 	return err
 }
+
+func (r *PaymentsRepository) GetAccountToPay(ctx context.Context, AccountToPayID string) (model.Pay, error) {
+	var pay model.Pay
+
+	rows, err := r.DB.QueryContext(
+		ctx,
+		"SELECT "+
+			"   account_to_pay.id_account_to_pay, "+
+			"	account_to_pay.description,"+
+			"	users.username,"+
+			"	account_to_pay.date_action,"+
+			"	((account_to_pay.value_pag + account_to_pay.value_add) - account_to_pay.value_discount) as value_pag"+
+			"	from account_to_pay"+
+			"	inner join users on users.id_user = account_to_pay.id_user"+
+			"	where account_to_pay.id_account_to_pay = $1",
+		AccountToPayID)
+
+	if err != nil {
+		return model.Pay{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p model.Pay
+		if err := rows.Scan(&p.AccountToPayID, &p.Shopp, &p.CustomerName, &p.Data, &p.Price); err != nil {
+			return model.Pay{}, err
+		}
+
+		pay = p
+	}
+
+	return pay, nil
+}

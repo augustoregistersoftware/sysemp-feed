@@ -8,7 +8,11 @@ import (
 )
 
 type PaymentCreatedEvent struct {
-	PaymentID string `json:"payment_id"`
+	CustomerName  string `json:"customer_name"`
+	Shopp         string `json:"shopp"`
+	TransactionID string `json:"transaction_id"`
+	Data          string `json:"data"`
+	Price         string `json:"price"`
 }
 
 type PaymentPublisher struct {
@@ -21,9 +25,13 @@ func NewPaymentPublisher(ch *amqp.Channel) *PaymentPublisher {
 	}
 }
 
-func (p *PaymentPublisher) PublishPaymentCreated(paymentID string) error {
+func (p *PaymentPublisher) PublishPaymentCreated(customerName string, shopp string, transactionID string, data string, price string) error {
 	event := PaymentCreatedEvent{
-		PaymentID: paymentID,
+		CustomerName:  customerName,
+		Shopp:         shopp,
+		TransactionID: transactionID,
+		Data:          data,
+		Price:         price,
 	}
 
 	body, err := json.Marshal(event)
@@ -46,6 +54,6 @@ func (p *PaymentPublisher) PublishPaymentCreated(paymentID string) error {
 		return err
 	}
 
-	log.Printf("[publisher] mensagem publicada na fila payment.created: payment_id=%s", paymentID)
+	log.Printf("[publisher] mensagem publicada na fila payment.created: transaction_id=%s", transactionID)
 	return nil
 }

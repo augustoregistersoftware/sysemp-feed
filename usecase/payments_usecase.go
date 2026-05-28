@@ -54,7 +54,12 @@ func (u *PaymentsPayUsecase) Pay(ctx context.Context, pay model.Pay) error {
 		return err
 	}
 
-	err = u.publisher.PublishPaymentCreated(pay.AccountToPayID)
+	pays, err := u.repository.GetAccountToPay(ctx, pay.AccountToPayID)
+	if err != nil {
+		return err
+	}
+
+	err = u.publisher.PublishPaymentCreated(pays.CustomerName, pays.Shopp, pays.AccountToPayID, pays.Data, pays.Price)
 	if err != nil {
 		return err
 	}

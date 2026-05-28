@@ -8,4 +8,8 @@ type Payment struct {
 type Pay struct {
 	AccountToPayID string `json:"account_to_pay_id" binding:"required"`
 	PaymentID      int    `json:"payment_id" binding:"required"`
+	CustomerName   string
+	Shopp          string
+	Data           string
+	Price          string
 }
